@@ -28,8 +28,8 @@ Goal: Provide a blueprint for integrating compute (VM), analytics (Synapse Spark
 
 ### Deployment Steps:
 1. Clone this repository.
-2. Modify infra/main.bicep parameters or .env file with your configuration values.
-3. Run ./scripts/deploy.sh to create the Resource Group, VNet, NSG, SQL VM, and Synapse Workspace.
+2. Modify `infra/main.bicep` parameters or `.env` file with your configuration values.
+3. Run `./scripts/deploy.sh` to create the Resource Group, VNet, NSG, SQL VM, and Synapse Workspace.
 
 Note: This deploy script sets up infrastructure only. It does not automatically upload the notebook to Synapse or run the Spark job. Those steps follow below.
 
@@ -41,17 +41,17 @@ Note: This deploy script sets up infrastructure only. It does not automatically 
 ## 🔑 Security and Networking
 
 NSG and Firewall Rules:
-- The network.bicep module creates a VNet and NSG.
+- The `network.bicep` module creates a VNet and NSG.
 - Only essential ports (e.g., port 1433 for SQL Server) are allowed.
 - Traffic is restricted to known IP ranges (e.g., Synapse subnet) for secure data flows.
 
-Least Privilege: By default, no inbound traffic is allowed except those explicitly defined. You can adjust rules as needed in infra/dependencies/network.bicep.
+Least Privilege: By default, no inbound traffic is allowed except those explicitly defined. You can adjust rules as needed in `infra/dependencies/network.bicep`.
 
 ## 💻 Running the Spark Notebook
 
 ### Steps:
 1. After infrastructure deployment, open the Azure Synapse Studio linked to the newly created workspace.
-2. Navigate to the Manage hub, and import the notebook from spark/notebooks/data_upload_notebook.ipynb.
+2. Navigate to the Manage hub, and import the notebook from `spark/notebooks/data_upload_notebook.ipynb`.
 3. Attach the notebook to a Spark pool and run it.
 4. The notebook will:
    - Access sample data (e.g., from a specified storage location).
@@ -84,9 +84,9 @@ SYNAPSE_ADMIN_EMAIL='admin@example.com'
 
 ### Bicep Parameters:
 
-Adjust parameters in infra/main.bicep to specify resource names, sizes, and other configuration options.
+Adjust parameters in `infra/main.bicep` to specify resource names, sizes, and other configuration options.
 
-Note: Do not commit secrets to your repo. Keep sensitive info in .env and add .env to .gitignore.
+Note: Do not commit secrets to your repo. Keep sensitive info in `.env` and add `.env` to `.gitignore`.
 
 ## 📜 Known Limitations
 
