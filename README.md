@@ -21,10 +21,34 @@ Goal: Provide a blueprint for integrating compute (VM), analytics (Synapse Spark
 
 ## 🏗️ Infrastructure Setup
 
-### Prerequisites:
+### Prerequisites
 - Azure CLI installed
 - Access to create resources in Azure (subscription, resource group)
 - Bicep CLI installed (if using local tooling)
+
+### Resources
+
+| Provider and type | Description |
+| - | - |
+| `Microsoft.Resources/resourceGroups` | The resource group into which all resources are deployed |
+| `Microsoft.Network/virtualNetworks` | The virtual network that hosts the SQL VM and integrates with the Synapse workspace |
+| `Microsoft.Network/subnets` | Subnets used for isolating the SQL VM and Synapse components |
+| `Microsoft.Network/networkSecurityGroups` | Network Security Groups enforcing least privilege network access rules |
+| `Microsoft.Network/publicIPAddresses` | Public IP addresses (if required) for the SQL VM to allow remote connectivity |
+| `Microsoft.Network/networkInterfaces` | Network interfaces enabling the SQL VM’s connection to the VNet |
+| `Microsoft.Compute/virtualMachines` | The Azure VM running SQL Server, serving as the SQL instance |
+| `Microsoft.Storage/storageAccounts` | The storage account used as the default Data Lake storage for the Synapse workspace |
+| `Microsoft.Synapse/workspaces` | The Azure Synapse workspace for running analytics, Spark notebooks, and pipelines |
+| `Microsoft.Synapse/sparkPools` | Spark pools provisioned within the Synapse workspace for executing Spark workloads |
+
+### Local Deployment
+
+With Azure CLI:
+
+```sh
+az group create --name restricted-spark-sql --location westus
+az deployment group create --resource-group restricted-spark-sql --template-file main.bicep
+```
 
 ### Deployment Steps:
 1. Clone this repository.

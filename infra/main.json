@@ -1,0 +1,630 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "metadata": {
+    "_generator": {
+      "name": "bicep",
+      "version": "0.30.23.60470",
+      "templateHash": "6351285953836102823"
+    }
+  },
+  "parameters": {
+    "deploymentName": {
+      "type": "string",
+      "defaultValue": "demo",
+      "minLength": 2,
+      "maxLength": 12,
+      "metadata": {
+        "description": "Name for the deployment prefix to derive the names of dependent resources."
+      }
+    },
+    "location": {
+      "type": "string",
+      "defaultValue": "[resourceGroup().location]",
+      "metadata": {
+        "description": "The location into which the resources should be deployed."
+      }
+    },
+    "tags": {
+      "type": "object",
+      "defaultValue": {},
+      "metadata": {
+        "description": "Set of tags to apply to all resources."
+      }
+    },
+    "vnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource name of the virtual network to deploy the resources into."
+      }
+    },
+    "vnetRgName": {
+      "type": "string",
+      "metadata": {
+        "description": "Resource group name of the virtual network to deploy the resources into."
+      }
+    },
+    "subnetName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the subnet to deploy into."
+      }
+    },
+    "sqlAdminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "The admin username for the SQL VM."
+      }
+    },
+    "sqlAdminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "The admin password for the SQL VM."
+      }
+    }
+  },
+  "variables": {
+    "name": "[toLower(format('{0}', parameters('deploymentName')))]",
+    "uniqueSuffix": "[substring(uniqueString(resourceGroup().id), 0, 7)]",
+    "vnetResourceId": "[format('/subscriptions/{0}/resourceGroups/{1}/providers/Microsoft.Network/virtualNetworks/{2}', subscription().subscriptionId, parameters('vnetRgName'), parameters('vnetName'))]",
+    "subnetResourceId": "[format('{0}/subnets/{1}', variables('vnetResourceId'), parameters('subnetName'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('network-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "vnetName": {
+            "value": "[format('CoreVnet-{0}', variables('name'))]"
+          },
+          "subnetName": {
+            "value": "[format('default-{0}', variables('name'))]"
+          },
+          "vnetAddressPrefix": {
+            "value": "10.1.0.0/16"
+          },
+          "subnetAddressPrefix": {
+            "value": "10.1.0.0/24"
+          },
+          "publicIpName": {
+            "value": "[format('core-vnet-ip-{0}', variables('name'))]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "2716333484086979840"
+            }
+          },
+          "parameters": {
+            "vnetName": {
+              "type": "string",
+              "defaultValue": "CoreVnet",
+              "metadata": {
+                "description": "Name of the virtual network."
+              }
+            },
+            "subnetName": {
+              "type": "string",
+              "defaultValue": "default",
+              "metadata": {
+                "description": "Name of the subnet to be created within the VNet."
+              }
+            },
+            "vnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.1.0.0/16",
+              "metadata": {
+                "description": "Address prefix for the virtual network."
+              }
+            },
+            "subnetAddressPrefix": {
+              "type": "string",
+              "defaultValue": "10.1.0.0/24",
+              "metadata": {
+                "description": "Address prefix for the subnet."
+              }
+            },
+            "publicIpName": {
+              "type": "string",
+              "defaultValue": "core-vnet-ip",
+              "metadata": {
+                "description": "Name of the public IP address resource."
+              }
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "[resourceGroup().location]",
+              "metadata": {
+                "description": "The location into which the resources should be deployed."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/virtualNetworks",
+              "apiVersion": "2023-11-01",
+              "name": "[parameters('vnetName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "addressSpace": {
+                  "addressPrefixes": [
+                    "[parameters('vnetAddressPrefix')]"
+                  ]
+                },
+                "subnets": [
+                  {
+                    "name": "[parameters('subnetName')]",
+                    "properties": {
+                      "addressPrefix": "[parameters('subnetAddressPrefix')]"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/publicIPAddresses",
+              "apiVersion": "2023-11-01",
+              "name": "[parameters('publicIpName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Basic"
+              },
+              "properties": {
+                "publicIPAllocationMethod": "Dynamic"
+              }
+            }
+          ],
+          "outputs": {
+            "vnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks', parameters('vnetName'))]"
+            },
+            "subnetId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/virtualNetworks/subnets', parameters('vnetName'), parameters('subnetName'))]"
+            },
+            "publicIpAddressId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Network/publicIPAddresses', parameters('publicIpName'))]"
+            }
+          }
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('sqlvm-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "location": {
+            "value": "[parameters('location')]"
+          },
+          "sqlVmName": {
+            "value": "[format('sqlvm-{0}', variables('name'))]"
+          },
+          "sqlAdminUsername": {
+            "value": "[parameters('sqlAdminUsername')]"
+          },
+          "sqlAdminPassword": {
+            "value": "[parameters('sqlAdminPassword')]"
+          },
+          "subnetId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('network-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))), '2022-09-01').outputs.subnetId.value]"
+          },
+          "publicIpId": {
+            "value": "[reference(resourceId('Microsoft.Resources/deployments', format('network-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))), '2022-09-01').outputs.publicIpAddressId.value]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "1002158392781663836"
+            }
+          },
+          "parameters": {
+            "sqlVmName": {
+              "type": "string",
+              "metadata": {
+                "description": "Name of the SQL Virtual Machine."
+              }
+            },
+            "sqlAdminUsername": {
+              "type": "string",
+              "metadata": {
+                "description": "Admin username for the SQL Virtual Machine."
+              }
+            },
+            "sqlAdminPassword": {
+              "type": "securestring",
+              "metadata": {
+                "description": "Admin password for the SQL Virtual Machine."
+              }
+            },
+            "location": {
+              "type": "string",
+              "metadata": {
+                "description": "The location into which the SQL Virtual Machine should be deployed."
+              }
+            },
+            "subnetId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the subnet where the SQL Virtual Machine will be deployed."
+              }
+            },
+            "publicIpId": {
+              "type": "string",
+              "metadata": {
+                "description": "Resource ID of the public IP address to associate with the SQL Virtual Machine."
+              }
+            },
+            "vmSize": {
+              "type": "string",
+              "defaultValue": "Standard_B2s",
+              "metadata": {
+                "description": "Size of the Virtual Machine."
+              }
+            },
+            "allowedDestinationPorts": {
+              "type": "array",
+              "defaultValue": [
+                1433
+              ]
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Network/networkSecurityGroups",
+              "apiVersion": "2020-11-01",
+              "name": "[format('{0}-nsg', parameters('sqlVmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "securityRules": [
+                  {
+                    "name": "AllowAzureServices",
+                    "properties": {
+                      "priority": 100,
+                      "direction": "Inbound",
+                      "access": "Allow",
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRanges": "[parameters('allowedDestinationPorts')]",
+                      "sourceAddressPrefix": "AzureCloud",
+                      "destinationAddressPrefix": "*"
+                    }
+                  },
+                  {
+                    "name": "DenyAllInbound",
+                    "properties": {
+                      "priority": 200,
+                      "direction": "Inbound",
+                      "access": "Deny",
+                      "protocol": "*",
+                      "sourcePortRange": "*",
+                      "destinationPortRange": "*",
+                      "sourceAddressPrefix": "*",
+                      "destinationAddressPrefix": "*"
+                    }
+                  }
+                ]
+              }
+            },
+            {
+              "type": "Microsoft.Network/networkInterfaces",
+              "apiVersion": "2022-11-01",
+              "name": "[format('{0}-nic', parameters('sqlVmName'))]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "ipConfigurations": [
+                  {
+                    "name": "ipconfig1",
+                    "properties": {
+                      "subnet": {
+                        "id": "[parameters('subnetId')]"
+                      },
+                      "privateIPAllocationMethod": "Dynamic",
+                      "publicIPAddress": {
+                        "id": "[parameters('publicIpId')]"
+                      }
+                    }
+                  }
+                ],
+                "networkSecurityGroup": {
+                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('sqlVmName')))]"
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkSecurityGroups', format('{0}-nsg', parameters('sqlVmName')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Compute/virtualMachines",
+              "apiVersion": "2023-09-01",
+              "name": "[parameters('sqlVmName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "hardwareProfile": {
+                  "vmSize": "[parameters('vmSize')]"
+                },
+                "storageProfile": {
+                  "imageReference": {
+                    "publisher": "MicrosoftSQLServer",
+                    "offer": "sql2019-ws2022",
+                    "sku": "standard",
+                    "version": "latest"
+                  },
+                  "osDisk": {
+                    "createOption": "FromImage"
+                  }
+                },
+                "osProfile": {
+                  "computerName": "[parameters('sqlVmName')]",
+                  "adminUsername": "[parameters('sqlAdminUsername')]",
+                  "adminPassword": "[parameters('sqlAdminPassword')]"
+                },
+                "networkProfile": {
+                  "networkInterfaces": [
+                    {
+                      "id": "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('sqlVmName')))]"
+                    }
+                  ]
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Network/networkInterfaces', format('{0}-nic', parameters('sqlVmName')))]"
+              ]
+            },
+            {
+              "type": "Microsoft.SqlVirtualMachine/sqlVirtualMachines",
+              "apiVersion": "2023-01-01-preview",
+              "name": "[parameters('sqlVmName')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "virtualMachineResourceId": "[resourceId('Microsoft.Compute/virtualMachines', parameters('sqlVmName'))]",
+                "sqlManagement": "Full",
+                "sqlServerLicenseType": "PAYG",
+                "leastPrivilegeMode": "Enabled",
+                "serverConfigurationsManagementSettings": {
+                  "sqlConnectivityUpdateSettings": {
+                    "connectivityType": "PUBLIC",
+                    "port": 1433,
+                    "sqlAuthUpdateUserName": "[parameters('sqlAdminUsername')]",
+                    "sqlAuthUpdatePassword": "[parameters('sqlAdminPassword')]"
+                  }
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Compute/virtualMachines', parameters('sqlVmName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "vmName": {
+              "type": "string",
+              "value": "[parameters('sqlVmName')]"
+            },
+            "publicIpId": {
+              "type": "string",
+              "value": "[parameters('publicIpId')]"
+            }
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Resources/deployments', format('network-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix')))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Resources/deployments",
+      "apiVersion": "2022-09-01",
+      "name": "[format('synapse-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))]",
+      "properties": {
+        "expressionEvaluationOptions": {
+          "scope": "inner"
+        },
+        "mode": "Incremental",
+        "parameters": {
+          "synapseWorkspaceName": {
+            "value": "[format('synapse-{0}-{1}', variables('name'), variables('uniqueSuffix'))]"
+          },
+          "storageAccountName": {
+            "value": "[format('synapseworkspace{0}', variables('uniqueSuffix'))]"
+          },
+          "location": {
+            "value": "[parameters('location')]"
+          }
+        },
+        "template": {
+          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+          "contentVersion": "1.0.0.0",
+          "metadata": {
+            "_generator": {
+              "name": "bicep",
+              "version": "0.30.23.60470",
+              "templateHash": "11177798756517284581"
+            }
+          },
+          "parameters": {
+            "synapseWorkspaceName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the Synapse Workspace."
+              }
+            },
+            "storageAccountName": {
+              "type": "string",
+              "metadata": {
+                "description": "The name of the default storage account for the Synapse Workspace."
+              }
+            },
+            "location": {
+              "type": "string",
+              "defaultValue": "westus",
+              "metadata": {
+                "description": "The location for the Synapse Workspace and storage resources."
+              }
+            }
+          },
+          "resources": [
+            {
+              "type": "Microsoft.Storage/storageAccounts",
+              "apiVersion": "2023-05-01",
+              "name": "[parameters('storageAccountName')]",
+              "location": "[parameters('location')]",
+              "sku": {
+                "name": "Standard_RAGRS"
+              },
+              "kind": "StorageV2",
+              "properties": {
+                "allowCrossTenantReplication": false,
+                "minimumTlsVersion": "TLS1_2",
+                "allowBlobPublicAccess": false,
+                "isHnsEnabled": true,
+                "supportsHttpsTrafficOnly": true,
+                "encryption": {
+                  "services": {
+                    "file": {
+                      "keyType": "Account",
+                      "enabled": true
+                    },
+                    "blob": {
+                      "keyType": "Account",
+                      "enabled": true
+                    }
+                  },
+                  "keySource": "Microsoft.Storage"
+                },
+                "accessTier": "Hot"
+              }
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}', parameters('storageAccountName'), 'default')]",
+              "properties": {
+                "cors": {
+                  "corsRules": []
+                },
+                "deleteRetentionPolicy": {
+                  "allowPermanentDelete": false,
+                  "enabled": false
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Synapse/workspaces",
+              "apiVersion": "2021-06-01",
+              "name": "[parameters('synapseWorkspaceName')]",
+              "location": "[parameters('location')]",
+              "identity": {
+                "type": "SystemAssigned"
+              },
+              "properties": {
+                "defaultDataLakeStorage": {
+                  "resourceId": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]",
+                  "accountUrl": "[format('https://{0}.dfs.core.windows.net', parameters('storageAccountName'))]",
+                  "filesystem": "default"
+                },
+                "sqlAdministratorLogin": "sqladminuser",
+                "publicNetworkAccess": "Enabled",
+                "azureADOnlyAuthentication": false,
+                "trustedServiceBypassEnabled": true
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Synapse/workspaces/firewallRules",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', parameters('synapseWorkspaceName'), 'allowAll')]",
+              "properties": {
+                "startIpAddress": "0.0.0.0",
+                "endIpAddress": "255.255.255.255"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
+              ]
+            },
+            {
+              "type": "Microsoft.Synapse/workspaces/bigDataPools",
+              "apiVersion": "2021-06-01",
+              "name": "[format('{0}/{1}', parameters('synapseWorkspaceName'), 'default')]",
+              "location": "[parameters('location')]",
+              "properties": {
+                "nodeSize": "Small",
+                "nodeSizeFamily": "MemoryOptimized",
+                "autoScale": {
+                  "enabled": false
+                },
+                "nodeCount": 3,
+                "autoPause": {
+                  "enabled": true,
+                  "delayInMinutes": 15
+                },
+                "sparkVersion": "3.4",
+                "sessionLevelPackagesEnabled": false,
+                "dynamicExecutorAllocation": {
+                  "enabled": false
+                }
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
+              ]
+            }
+          ],
+          "outputs": {
+            "storageAccountId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Storage/storageAccounts', parameters('storageAccountName'))]"
+            },
+            "synapseWorkspaceId": {
+              "type": "string",
+              "value": "[resourceId('Microsoft.Synapse/workspaces', parameters('synapseWorkspaceName'))]"
+            }
+          }
+        }
+      }
+    }
+  ],
+  "outputs": {
+    "vnetId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('network-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))), '2022-09-01').outputs.vnetId.value]"
+    },
+    "sqlVmName": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('sqlvm-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))), '2022-09-01').outputs.vmName.value]"
+    },
+    "synapseWorkspaceId": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Resources/deployments', format('synapse-{0}-{1}-deployment', variables('name'), variables('uniqueSuffix'))), '2022-09-01').outputs.synapseWorkspaceId.value]"
+    }
+  }
+}
