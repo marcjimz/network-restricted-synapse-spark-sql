@@ -97,15 +97,6 @@ SELECT TOP 10 * FROM YourDatabase.YourSchema.YourTable;
 
 ## ⚙️ Configuration
 
-### Environment Variables (sample in .env):
-
-```bash
-LOCATION='eastus'
-SQL_ADMIN_USERNAME='sqlAdmin'
-SQL_ADMIN_PASSWORD='YourSecureP@ssw0rd!'
-SYNAPSE_ADMIN_EMAIL='admin@example.com'
-```
-
 ### Bicep Parameters:
 
 Adjust parameters in `infra/main.bicep` to specify resource names, sizes, and other configuration options.
